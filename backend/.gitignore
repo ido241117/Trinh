@@ -1,0 +1,5 @@
+node_modules/
+dist/
+img/
+books-img/
+.env

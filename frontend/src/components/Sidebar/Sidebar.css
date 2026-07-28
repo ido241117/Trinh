@@ -1,0 +1,156 @@
+.app-nav {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 5rem;
+  flex-shrink: 0;
+  padding: 1rem 0;
+  gap: 0.5rem;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  z-index: 40;
+}
+
+.app-nav-tabs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.app-nav-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.app-nav-tab:hover {
+  color: var(--color-primary);
+  background: var(--color-surface-subtle);
+}
+
+.app-nav-tab.is-active {
+  color: var(--color-primary);
+  background: var(--color-primary-surface);
+}
+
+.app-nav-tab-label {
+  display: none;
+}
+
+.app-nav-utils {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.app-nav-util {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.app-nav-util:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-surface-subtle);
+}
+
+.app-nav-util.is-open {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-primary-surface);
+}
+
+.app-nav-util.is-ghost {
+  border-color: transparent;
+}
+
+.app-nav-util.is-ghost:hover {
+  border-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .app-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: auto;
+    flex: 0 0 0;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
+    padding: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    border-right: 0;
+    border-top: 1px solid var(--color-border);
+    box-shadow: 0 -4px 20px rgb(15 23 42 / 8%);
+    z-index: 2200;
+  }
+
+  html.dark .app-nav {
+    box-shadow: 0 -4px 20px rgb(0 0 0 / 28%);
+  }
+
+  .app-nav-tabs {
+    flex: 1;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: stretch;
+    gap: 0;
+    min-width: 0;
+    padding: 0.25rem 0.125rem;
+  }
+
+  .app-nav-tab {
+    flex: 1 1 0;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+    padding: 0.375rem 0.125rem;
+    border-radius: 0.625rem;
+  }
+
+  .app-nav-tab svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .app-nav-tab-label {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+  }
+
+  /* Apps + theme toggles are desktop-only; hide on mobile bottom nav */
+  .app-nav-utils {
+    display: none;
+  }
+}

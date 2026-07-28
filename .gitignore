@@ -1,0 +1,76 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+out/
+coverage/
+.vite/
+*.tsbuildinfo
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+backend-boot-*.txt
+deploy/node-stderr.txt
+deploy/node-stdout.txt
+deploy/start.log
+deploy/start.lock
+
+# Temp
+temp/
+tmp/
+*.tmp
+*.temp
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE
+.idea/
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
+
+# Local dumps / tooling output
+dbdump/
+.chrome-app-data/
+backend/scripts/*-report.json
+backend/scripts/hako-series-url-pages/
+backend/scripts/output/
+
+# Generated / cached media (keep dashboard assets under backend/data/ if present)
+backend/img/
+backend/books-img/
+backend/journal-attachments/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.bmp
+*.tif
+*.tiff
+*.ico
+*.avif
+*.heic
+*.svg
+!backend/data/
+!backend/data/**
+!frontend/public/
+!frontend/public/**

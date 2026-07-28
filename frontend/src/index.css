@@ -1,0 +1,209 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+
+  --font-sans: "Inter", "Segoe UI Variable", "Segoe UI", sans-serif;
+  --font-mono: "Cascadia Mono", "Consolas", monospace;
+  --app-bottom-nav-height: 0px;
+
+  --color-app-bg: #f5f7fb;
+  --color-root-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-raised: rgb(255 255 255 / 92%);
+  --color-surface-muted: #f8fafc;
+  --color-table-header: #f8fbff;
+  --color-surface-subtle: #eef2f7;
+  --color-control-surface: #f9fafb;
+  --color-surface-hover: #f5f9ff;
+  --color-surface-active: #eaf4ff;
+  --color-cover-placeholder: rgb(67 89 113 / 6%);
+  --color-cover-overlay: linear-gradient(180deg, rgb(24 34 45 / 18%) 0%, rgb(24 34 45 / 86%) 100%);
+  --color-cover-overlay-text: rgb(255 255 255 / 72%);
+
+  --color-text: #111827;
+  --color-text-strong: #0f172a;
+  --color-text-muted: #64748b;
+  --color-text-subtle: #94a3b8;
+  --color-control-text: #374151;
+  --color-text-inverse: #ffffff;
+
+  --color-border: #e5e7eb;
+  --color-border-soft: #eef2f7;
+  --color-border-strong: #dbe7f5;
+  --color-border-control: #d9d9d9;
+  --color-border-muted: #cbd5e1;
+
+  /* App accent: Apple-style minimal blue used by the original UI. */
+  --color-primary: #0a84ff;
+  --color-primary-hover: #0070e0;
+  --color-primary-text: #1d4ed8;
+  --color-primary-border: #93c5fd;
+  --color-primary-surface: #e8f2ff;
+  --color-primary-surface-soft: #f5f9ff;
+  --color-primary-surface-muted: #f1f7ff;
+  --color-primary-surface-strong: #dbeafe;
+
+  --color-success: #10b981;
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+  --color-warning-surface: #fff3bf;
+  --color-warning-text: #7c2d12;
+  --color-terminal-bg: #030712;
+  --color-terminal-surface: #1f2937;
+  --color-terminal-text: #d1d5db;
+  --color-terminal-muted: #9ca3af;
+  --color-terminal-subtle: #6b7280;
+
+  --color-overlay-strong: rgb(15 23 42 / 72%);
+  --shadow-soft: 0 2px 8px rgb(15 23 42 / 8%);
+  --shadow-control: 0 2px 10px rgb(15 23 42 / 10%);
+  --shadow-card-hover: 0 10px 24px rgb(15 23 42 / 12%);
+  --shadow-popover: 0 10px 30px rgb(15 23 42 / 18%);
+  --shadow-player: 0 -1px 3px rgb(15 23 42 / 6%);
+  --focus-ring: 0 0 0 2px rgb(10 132 255 / 10%);
+
+  --reader-chrome-bg: #1a1a1a;
+  --reader-toolbar-bg: #1e1e1e;
+  --reader-sidebar-bg: #252525;
+  --reader-pdf-bg: #3a3a3a;
+  --reader-pdf-page-bg: #4a4a4a;
+  --reader-border: #333333;
+  --reader-border-muted: #444444;
+  --reader-text: #e0e0e0;
+  --reader-text-muted: #999999;
+  --reader-text-subtle: #888888;
+  --reader-text-faint: #666666;
+  --reader-text-soft: #cccccc;
+  --reader-text-floating: #bbbbbb;
+  --reader-text-page-number: #d8d8d8;
+  --reader-accent: #8b8fff;
+  --reader-dot-border: #555555;
+  --reader-toolbar-hover: rgb(255 255 255 / 8%);
+  --reader-floating-border: rgb(255 255 255 / 10%);
+  --reader-floating-bg: rgb(20 20 20 / 72%);
+  --reader-floating-hover-bg: rgb(40 40 40 / 90%);
+  --reader-sidebar-hover: rgb(255 255 255 / 6%);
+  --reader-sidebar-active-bg: rgb(105 108 255 / 15%);
+  --reader-pdf-page-shadow: 0 8px 28px rgb(0 0 0 / 34%);
+  --reader-page-number-bg: rgb(0 0 0 / 58%);
+
+}
+
+html.dark {
+  color-scheme: dark;
+
+  --color-app-bg: #1e1e1e;
+  --color-root-bg: #181818;
+  --color-surface: #1f1f1f;
+  --color-surface-raised: rgb(37 37 38 / 94%);
+  --color-surface-muted: #252526;
+  --color-table-header: #252526;
+  --color-surface-subtle: #2d2d30;
+  --color-control-surface: #252526;
+  --color-surface-hover: #2a2d2e;
+  --color-surface-active: #283342;
+  --color-cover-placeholder: rgb(255 255 255 / 6%);
+  --color-cover-overlay: linear-gradient(180deg, rgb(15 15 15 / 18%) 0%, rgb(15 15 15 / 82%) 100%);
+  --color-cover-overlay-text: rgb(255 255 255 / 70%);
+
+  --color-text: #d4d4d4;
+  --color-text-strong: #e8e8e8;
+  --color-text-muted: #9da3aa;
+  --color-text-subtle: #7f858d;
+  --color-control-text: #c9c9c9;
+  --color-text-inverse: #ffffff;
+
+  --color-border: #3c3c3c;
+  --color-border-soft: #333333;
+  --color-border-strong: #454545;
+  --color-border-control: #4a4a4a;
+  --color-border-muted: #5a5a5a;
+
+  --color-primary-hover: #3399ff;
+  --color-primary-text: #79b8ff;
+  --color-primary-border: #2f6f9f;
+  --color-primary-surface: #12314d;
+  --color-primary-surface-soft: #252d36;
+  --color-primary-surface-muted: #26313d;
+  --color-primary-surface-strong: #1d3f63;
+
+  --color-success: #6a9955;
+  --color-danger: #f87171;
+  --color-warning: #d7ba7d;
+  --color-warning-surface: #3d3323;
+  --color-warning-text: #f2d39b;
+  --color-terminal-bg: #111111;
+  --color-terminal-surface: #252526;
+  --color-terminal-text: #cccccc;
+  --color-terminal-muted: #9da3aa;
+  --color-terminal-subtle: #777777;
+
+  --color-overlay-strong: rgb(0 0 0 / 58%);
+  --shadow-soft: 0 2px 8px rgb(0 0 0 / 20%);
+  --shadow-control: 0 2px 10px rgb(0 0 0 / 24%);
+  --shadow-card-hover: 0 10px 24px rgb(0 0 0 / 26%);
+  --shadow-popover: 0 10px 30px rgb(0 0 0 / 34%);
+  --shadow-player: 0 -1px 3px rgb(0 0 0 / 24%);
+  --focus-ring: 0 0 0 2px rgb(10 132 255 / 20%);
+}
+
+/* Scrollbar styling — dark theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-text-muted);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-subtle);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-muted) transparent;
+}
+
+.app-shell {
+  min-height: 100dvh;
+  height: 100dvh;
+}
+
+.app-shell-main {
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --app-bottom-nav-height: calc(3.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-shell-body {
+    padding-bottom: var(--app-bottom-nav-height);
+  }
+
+  .ant-drawer-content-wrapper {
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+
+  .ant-modal {
+    max-width: calc(100vw - 24px) !important;
+    margin: 12px auto !important;
+    padding-bottom: 0;
+  }
+
+  .ant-modal .ant-modal-content {
+    max-height: calc(100dvh - 24px);
+  }
+}

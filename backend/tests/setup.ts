@@ -1,0 +1,10 @@
+import 'dotenv/config'
+
+process.env.OFFLINE_EPUB_DIR ??= 'D:\\TestData\\Book'
+process.env.OFFLINE_EPUB_NOPICTURE_DIR ??= 'D:\\TestData\\Book-nopicture'
+process.env.OFFLINE_IMPORT_DIR ??= 'D:\\TestData\\Import'
+process.env.OFFLINE_IMG_DIR ??= 'D:\\TestData\\Book-cover'
+process.env.MUSIC_FOLDER ??= 'D:\\TestData\\Music'
+process.env.IMG_FOLDER ??= 'D:\\TestData\\Music-cover'
+process.env.JOURNAL_ATTACHMENT_DIR ??= 'D:\\TestData\\journal-attachments'
+process.env.OFFLINE_STORAGE_MOUNTS ??= 'thienstream2411@gmail.com=I:\\My Drive'
