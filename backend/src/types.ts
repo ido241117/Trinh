@@ -154,6 +154,26 @@ export interface AiQuotaServiceDocument {
   exhausted: boolean
 }
 
+export interface AccountDocument {
+  _id: string
+  name: string
+  account: string
+  password: string
+  logoUrl: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AccountDTO {
+  id: string
+  name: string
+  account: string
+  password: string
+  logoUrl: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 export interface AiQuotaServiceDTO {
   id: string
   name: string

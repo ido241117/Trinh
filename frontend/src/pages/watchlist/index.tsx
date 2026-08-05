@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import {
+  DeleteOutlined,
   LinkOutlined,
   PlusOutlined,
 } from '@ant-design/icons'
-import { Alert, Button, Empty, Image, Input, List, Space, Spin, Typography, message } from 'antd'
+import { Alert, Button, Empty, Image, Input, List, Popconfirm, Space, Spin, Typography, message } from 'antd'
 import type { WatchlistItemDTO } from '../../types'
-import { fetchWatchlist, saveWatchlistItem } from '../../api'
+import { deleteWatchlistItem, fetchWatchlist, saveWatchlistItem } from '../../api'
 import './watchlist.css'
 
 const YT_REGEX = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([A-Za-z0-9_-]{11})/
@@ -55,6 +56,16 @@ export default function WatchlistPage() {
       message.error(err instanceof Error ? err.message : 'Save failed')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleDelete(id: string) {
+    try {
+      await deleteWatchlistItem(id)
+      setItems(prev => prev.filter(item => item.id !== id))
+      message.success('Removed from playlist')
+    } catch (err) {
+      message.error(err instanceof Error ? err.message : 'Delete failed')
     }
   }
 
@@ -133,6 +144,28 @@ export default function WatchlistPage() {
               <List.Item
                 className="watchlist-row"
                 onClick={() => openVideo(item)}
+                actions={[
+                  <Popconfirm
+                    key="delete"
+                    title="Xóa link này khỏi playlist?"
+                    onConfirm={event => {
+                      event?.stopPropagation()
+                      return handleDelete(item.id)
+                    }}
+                    onCancel={event => event?.stopPropagation()}
+                    okText="Xóa"
+                    cancelText="Hủy"
+                  >
+                    <Button
+                      danger
+                      type="text"
+                      shape="circle"
+                      icon={<DeleteOutlined />}
+                      aria-label="Delete from playlist"
+                      onClick={event => event.stopPropagation()}
+                    />
+                  </Popconfirm>,
+                ]}
               >
                 <List.Item.Meta
                   avatar={

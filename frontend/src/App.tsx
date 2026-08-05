@@ -10,6 +10,7 @@ import WatchlistPage from './pages/watchlist'
 import LocalLibraryPage from './pages/local-library'
 import JournalPage from './pages/journal'
 import { AiQuotaPage } from './pages/ai-quota'
+import AccountsPage from './pages/accounts'
 import DashboardPage from './pages/dashboard'
 import Player from './components/Player/Player'
 import { AppThemeProvider, type AppTheme } from './context/AppThemeContext'
@@ -44,7 +45,7 @@ const THEME_COLORS = {
 }
 
 function isTab(value: string | null): value is Tab {
-  return value === 'dashboard' || value === 'music' || value === 'watchlist' || value === 'local-library' || value === 'journal' || value === 'ai-quota'
+  return value === 'dashboard' || value === 'music' || value === 'watchlist' || value === 'local-library' || value === 'journal' || value === 'ai-quota' || value === 'accounts'
 }
 
 function isTheme(value: string | null): value is AppTheme {
@@ -269,6 +270,7 @@ export default function App() {
             )}
             {activeTab === 'journal' && <JournalPage onTrackClick={play} />}
             {activeTab === 'ai-quota' && <AiQuotaPage />}
+            {activeTab === 'accounts' && <AccountsPage />}
           </div>
         </div>
 

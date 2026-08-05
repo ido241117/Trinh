@@ -199,6 +199,16 @@ export interface AiQuotaServiceDTO {
   exhausted: boolean
 }
 
+export interface AccountDTO {
+  id: string
+  name: string
+  account: string
+  password: string
+  logoUrl: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 export type DashboardBackgroundTheme = 'dark' | 'light' | 'mobile'
 
 /** Fixed API paths — files live in backend/data/dashboard-backgrounds/{theme}.png */

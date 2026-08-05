@@ -354,15 +354,21 @@ export function createLocalLibraryRouter(imgDir = LOCAL_LIBRARY_CONFIG.imgDir) {
 
       const variantRaw = readQueryString(req.query.variant)?.toLowerCase()
       const variant = variantRaw === 'lite' ? 'lite' : 'full'
+      const asDownload = (() => {
+        const raw = readQueryString(req.query.download)?.toLowerCase()
+        return raw === '1' || raw === 'true' || raw === 'yes'
+      })()
       const file = openLocalLibraryFile(parsed.source, doc, variant)
       const contentType = file.fileName.toLowerCase().endsWith('.pdf')
         ? 'application/pdf'
         : 'application/epub+zip'
+      const disposition = asDownload ? 'attachment' : 'inline'
+      const safeFileName = file.fileName.replace(/[\r\n"]/g, '_')
 
       res.set({
         'Content-Type': contentType,
         'Content-Length': String(file.size),
-        'Content-Disposition': `inline; filename="${file.fileName}"`,
+        'Content-Disposition': `${disposition}; filename="${safeFileName}"`,
         'Cache-Control': 'private, max-age=3600',
         'X-EPUB-Variant': variant,
       })

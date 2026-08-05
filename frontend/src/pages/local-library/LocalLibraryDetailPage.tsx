@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import {
   ArrowLeftOutlined,
   DeleteOutlined,
+  DownloadOutlined,
   EditOutlined,
   FolderOpenOutlined,
   ReadOutlined,
@@ -12,6 +13,7 @@ import {
   fetchLocalLibraryBook,
   fetchLocalLibraryBookToc,
   getLocalLibraryCoverUrl,
+  getLocalLibraryFileUrl,
   openLocalLibraryFolder,
   updateLocalLibraryBook,
 } from '../../api'
@@ -230,6 +232,17 @@ export default function LocalLibraryDetailPage({ bookId, onBack, onRead, onDelet
     }
   }
 
+  function handleDownload() {
+    if (!book?.canRead) return
+
+    const link = document.createElement('a')
+    link.href = getLocalLibraryFileUrl(book.id, 'full', { download: true })
+    link.rel = 'noopener'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  }
+
   if (loading) {
     return (
       <section className="books-page book-detail-page" role="main">
@@ -276,7 +289,7 @@ export default function LocalLibraryDetailPage({ bookId, onBack, onRead, onDelet
             {canEdit ? (
               <>
                 <Button icon={<EditOutlined />} onClick={openEditModal} disabled={deleting}>
-                  Sửa
+                  <span className="book-detail-action-text">Sửa</span>
                 </Button>
                 <Popconfirm
                   title="Bạn có chắc muốn xóa không?"
@@ -287,15 +300,24 @@ export default function LocalLibraryDetailPage({ bookId, onBack, onRead, onDelet
                   onConfirm={handleDelete}
                 >
                   <Button danger icon={<DeleteOutlined />} loading={deleting}>
-                    Xóa
+                    <span className="book-detail-action-text">Xóa</span>
                   </Button>
                 </Popconfirm>
               </>
             ) : null}
             {book.canRead ? (
-              <Button type="primary" icon={<ReadOutlined />} onClick={onRead} disabled={deleting}>
-                Đọc sách
-              </Button>
+              <>
+                <Button
+                  icon={<DownloadOutlined />}
+                  onClick={handleDownload}
+                  disabled={deleting}
+                >
+                  <span className="book-detail-action-text">Tải</span>
+                </Button>
+                <Button type="primary" icon={<ReadOutlined />} onClick={onRead} disabled={deleting}>
+                  <span className="book-detail-action-text">Đọc sách</span>
+                </Button>
+              </>
             ) : null}
           </div>
         </div>

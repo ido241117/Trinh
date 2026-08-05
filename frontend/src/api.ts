@@ -10,6 +10,7 @@ import type {
   LocalLibraryDetailDTO,
   LocalLibraryTocDTO,
   AiQuotaServiceDTO,
+  AccountDTO,
   CycleRule,
   DashboardSettingsDTO,
   DashboardBackgroundTheme,
@@ -375,9 +376,17 @@ export async function fetchLocalLibraryBookToc(id: string): Promise<LocalLibrary
   return res.json()
 }
 
-export function getLocalLibraryFileUrl(id: string, variant: 'full' | 'lite' = 'full') {
+export function getLocalLibraryFileUrl(
+  id: string,
+  variant: 'full' | 'lite' = 'full',
+  options?: { download?: boolean },
+) {
   const base = `/api/local-library/${encodeURIComponent(id)}/file`
-  return variant === 'lite' ? `${base}?variant=lite` : base
+  const params = new URLSearchParams()
+  if (variant === 'lite') params.set('variant', 'lite')
+  if (options?.download) params.set('download', '1')
+  const qs = params.toString()
+  return qs ? `${base}?${qs}` : base
 }
 
 export async function openLocalLibraryFolder(folderPath: string): Promise<void> {
@@ -600,5 +609,86 @@ export async function toggleAiQuotaServiceExhausted(id: string, exhausted: boole
     throw new Error(body.error ?? 'Failed to toggle exhausted status')
   }
   return res.json()
+}
+
+// Accounts API
+export async function fetchAccounts(): Promise<AccountDTO[]> {
+  const res = await fetch('/api/accounts')
+  if (!res.ok) throw new Error('Failed to fetch accounts')
+  return res.json()
+}
+
+export async function createAccount(input: {
+  name: string
+  account: string
+  password: string
+  logo?: File
+}): Promise<AccountDTO> {
+  const hasLogo = Boolean(input.logo)
+  const res = hasLogo
+    ? await fetch('/api/accounts', {
+        method: 'POST',
+        body: (() => {
+          const form = new FormData()
+          form.append('name', input.name)
+          form.append('account', input.account)
+          form.append('password', input.password)
+          if (input.logo) form.append('logo', input.logo, input.logo.name)
+          return form
+        })(),
+      })
+    : await fetch('/api/accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: input.name,
+          account: input.account,
+          password: input.password,
+        }),
+      })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error ?? 'Failed to create account')
+  }
+  return res.json()
+}
+
+export async function updateAccount(
+  id: string,
+  input: {
+    name?: string
+    account?: string
+    password?: string
+    logo?: File
+  },
+): Promise<AccountDTO> {
+  const hasLogo = Boolean(input.logo)
+  const res = hasLogo
+    ? await fetch(`/api/accounts/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        body: (() => {
+          const form = new FormData()
+          if (input.name !== undefined) form.append('name', input.name)
+          if (input.account !== undefined) form.append('account', input.account)
+          if (input.password !== undefined) form.append('password', input.password)
+          if (input.logo) form.append('logo', input.logo, input.logo.name)
+          return form
+        })(),
+      })
+    : await fetch(`/api/accounts/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error ?? 'Failed to update account')
+  }
+  return res.json()
+}
+
+export async function deleteAccount(id: string): Promise<void> {
+  const res = await fetch(`/api/accounts/${encodeURIComponent(id)}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error('Failed to delete account')
 }
 

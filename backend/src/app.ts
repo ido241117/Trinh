@@ -10,11 +10,13 @@ import { createWatchlistRouter } from './routes/watchlist.js'
 import { createJournalRouter } from './routes/journal.js'
 import { createLocalLibraryRouter } from './routes/local-library.js'
 import { createAiQuotaRouter } from './routes/ai-quota.js'
+import { createAccountsRouter } from './routes/accounts.js'
 import { createDashboardRouter } from './routes/dashboard.js'
 import { LOCAL_LIBRARY_CONFIG } from './config/local-library.js'
 import { MUSIC_CONFIG } from './config/music.js'
 import { JOURNAL_CONFIG } from './config/journal.js'
 import { AI_QUOTA_CONFIG } from './config/ai-quota.js'
+import { ACCOUNTS_CONFIG } from './config/accounts.js'
 import { DASHBOARD_CONFIG } from './config/dashboard.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -40,6 +42,7 @@ export function createApp() {
   app.use('/api/local-library', createLocalLibraryRouter(LOCAL_LIBRARY_CONFIG.imgDir))
   app.use('/api/journal', createJournalRouter(JOURNAL_CONFIG.attachmentDir))
   app.use('/api/ai-quota', createAiQuotaRouter(AI_QUOTA_CONFIG.iconDir))
+  app.use('/api/accounts', createAccountsRouter(ACCOUNTS_CONFIG.logoDir))
   app.use('/api/dashboard', createDashboardRouter(DASHBOARD_CONFIG.backgroundDir))
 
   if (existsSync(frontendDist)) {
