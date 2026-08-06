@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ConfigProvider, theme } from 'antd'
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { usePlayer } from './hooks/usePlayer'
 import { useLibrary } from './hooks/useLibrary'
 import { useMediaQuery } from './hooks/useMediaQuery'
@@ -8,16 +9,23 @@ import MusicMvpPage from './pages/music'
 import { NowPlayingProvider } from './pages/music/MusicNowPlayingContext'
 import WatchlistPage from './pages/watchlist'
 import LocalLibraryPage from './pages/local-library'
+import LocalLibraryDetailRoute from './pages/local-library/LocalLibraryDetailRoute'
+import LocalLibraryReadRoute from './pages/local-library/LocalLibraryReadRoute'
 import JournalPage from './pages/journal'
 import { AiQuotaPage } from './pages/ai-quota'
 import AccountsPage from './pages/accounts'
 import DashboardPage from './pages/dashboard'
 import Player from './components/Player/Player'
 import { AppThemeProvider, type AppTheme } from './context/AppThemeContext'
-import type { Tab } from './components/Sidebar/Sidebar'
+import {
+  ACTIVE_TAB_STORAGE_KEY,
+  TAB_PATHS,
+  defaultPathFromStorage,
+  localLibraryBookPath,
+  tabFromPathname,
+} from './routes/paths'
 import './index.css'
 
-const ACTIVE_TAB_STORAGE_KEY = 'app-active-tab'
 const THEME_STORAGE_KEY = 'app-theme'
 const VOLUME_STORAGE_KEY = 'player-volume'
 
@@ -44,10 +52,6 @@ const THEME_COLORS = {
   },
 }
 
-function isTab(value: string | null): value is Tab {
-  return value === 'dashboard' || value === 'music' || value === 'watchlist' || value === 'local-library' || value === 'journal' || value === 'ai-quota' || value === 'accounts'
-}
-
 function isTheme(value: string | null): value is AppTheme {
   return value === 'light' || value === 'dark'
 }
@@ -65,18 +69,16 @@ function readStoredVolume(): number {
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<Tab>(() => {
-    const stored = localStorage.getItem(ACTIVE_TAB_STORAGE_KEY)
-    if (stored === 'books') return 'local-library'
-    return isTab(stored) ? stored : 'music'
-  })
+  const location = useLocation()
+  const navigate = useNavigate()
+  const activeTab = tabFromPathname(location.pathname) ?? 'music'
+
   const [appTheme, setAppTheme] = useState<AppTheme>(() => {
     const stored = localStorage.getItem(THEME_STORAGE_KEY)
     const theme = isTheme(stored) ? stored : 'light'
     document.documentElement.classList.toggle('dark', theme === 'dark')
     return theme
   })
-  const [localLibraryInitialBookId, setLocalLibraryInitialBookId] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
   const [musicProgress, setMusicProgress] = useState(0)
   const [musicDuration, setMusicDuration] = useState(0)
@@ -84,8 +86,9 @@ export default function App() {
   const themeColors = THEME_COLORS[appTheme]
 
   useEffect(() => {
-    localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, activeTab)
-  }, [activeTab])
+    const tab = tabFromPathname(location.pathname)
+    if (tab) localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, tab)
+  }, [location.pathname])
 
   useEffect(() => {
     localStorage.setItem(THEME_STORAGE_KEY, appTheme)
@@ -171,11 +174,6 @@ export default function App() {
     }
   }
 
-  function openLocalLibraryBookDetail(bookId: string) {
-    setLocalLibraryInitialBookId(bookId)
-    setActiveTab('local-library')
-  }
-
   return (
     <AppThemeProvider theme={appTheme} setTheme={setAppTheme}>
     <ConfigProvider
@@ -216,61 +214,68 @@ export default function App() {
             activeTab={activeTab}
             appTheme={appTheme}
             onThemeChange={setAppTheme}
-            onTabChange={setActiveTab}
+            onTabChange={tab => navigate(TAB_PATHS[tab])}
           />
 
           <div className="app-shell-main flex-1 min-h-0 overflow-hidden">
-            {activeTab === 'dashboard' && (
-              <DashboardPage
-                currentTrack={currentTrack}
-                isPlaying={isPlaying}
-                onTogglePlay={togglePlay}
-                onNext={next}
-                onPrev={prev}
-                musicProgress={musicProgress}
-                musicDuration={musicDuration}
-                onSeek={handleSeek}
-                volume={volume}
-                onVolumeChange={handleVolume}
-                onOpenBookDetail={openLocalLibraryBookDetail}
+            <Routes>
+              <Route path="/" element={<Navigate to={defaultPathFromStorage()} replace />} />
+              <Route
+                path="/dashboard"
+                element={(
+                  <DashboardPage
+                    currentTrack={currentTrack}
+                    isPlaying={isPlaying}
+                    onTogglePlay={togglePlay}
+                    onNext={next}
+                    onPrev={prev}
+                    musicProgress={musicProgress}
+                    musicDuration={musicDuration}
+                    onSeek={handleSeek}
+                    volume={volume}
+                    onVolumeChange={handleVolume}
+                    onOpenBookDetail={bookId => navigate(localLibraryBookPath(bookId))}
+                  />
+                )}
               />
-            )}
-            {activeTab === 'music' && (
-              <NowPlayingProvider trackId={currentTrackId}>
-                <MusicMvpPage
-                  tracks={tracks}
-                  isEmpty={isEmpty}
-                  loading={loading}
-                  loadingMore={loadingMore}
-                  hasMore={hasMore}
-                  paginated={isMobile}
-                  error={error}
-                  search={search}
-                  setSearch={setSearch}
-                  sortField={sortField}
-                  setSortField={setSortField}
-                  sortOrder={sortOrder}
-                  setSortOrder={setSortOrder}
-                  setDateFilter={setDateFilter}
-                  loadMore={loadMore}
-                  listResetKey={listResetKey}
-                  rescan={rescan}
-                  upsertTrack={upsertTrack}
-                  removeTrack={removeTrack}
-                  onTrackClick={play}
-                />
-              </NowPlayingProvider>
-            )}
-            {activeTab === 'watchlist' && <WatchlistPage />}
-            {activeTab === 'local-library' && (
-              <LocalLibraryPage
-                initialBookId={localLibraryInitialBookId}
-                onInitialBookIdConsumed={() => setLocalLibraryInitialBookId(null)}
+              <Route
+                path="/music"
+                element={(
+                  <NowPlayingProvider trackId={currentTrackId}>
+                    <MusicMvpPage
+                      tracks={tracks}
+                      isEmpty={isEmpty}
+                      loading={loading}
+                      loadingMore={loadingMore}
+                      hasMore={hasMore}
+                      paginated={isMobile}
+                      error={error}
+                      search={search}
+                      setSearch={setSearch}
+                      sortField={sortField}
+                      setSortField={setSortField}
+                      sortOrder={sortOrder}
+                      setSortOrder={setSortOrder}
+                      setDateFilter={setDateFilter}
+                      loadMore={loadMore}
+                      listResetKey={listResetKey}
+                      rescan={rescan}
+                      upsertTrack={upsertTrack}
+                      removeTrack={removeTrack}
+                      onTrackClick={play}
+                    />
+                  </NowPlayingProvider>
+                )}
               />
-            )}
-            {activeTab === 'journal' && <JournalPage onTrackClick={play} />}
-            {activeTab === 'ai-quota' && <AiQuotaPage />}
-            {activeTab === 'accounts' && <AccountsPage />}
+              <Route path="/watchlist" element={<WatchlistPage />} />
+              <Route path="/local-library" element={<LocalLibraryPage />} />
+              <Route path="/local-library/books/:bookId" element={<LocalLibraryDetailRoute />} />
+              <Route path="/local-library/books/:bookId/read" element={<LocalLibraryReadRoute />} />
+              <Route path="/journal" element={<JournalPage onTrackClick={play} />} />
+              <Route path="/ai-quota" element={<AiQuotaPage />} />
+              <Route path="/accounts" element={<AccountsPage />} />
+              <Route path="*" element={<Navigate to={TAB_PATHS.music} replace />} />
+            </Routes>
           </div>
         </div>
 

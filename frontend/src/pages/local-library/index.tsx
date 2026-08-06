@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   ArrowDownOutlined,
   ArrowUpOutlined,
@@ -19,10 +20,9 @@ import {
 } from 'antd'
 import { clearLocalLibraryLastRead, importLocalLibraryBook } from '../../api'
 import { useLocalLibrary } from '../../hooks/useLocalLibrary'
+import { localLibraryBookPath } from '../../routes/paths'
 import type { LocalLibrarySort, LocalLibrarySourceFilter } from '../../types'
 import LocalLibraryCard from './LocalLibraryCard'
-import LocalLibraryDetailPage from './LocalLibraryDetailPage'
-import LocalLibraryReadPage from './LocalLibraryReadPage'
 import './books.css'
 import './local-library.css'
 
@@ -47,13 +47,8 @@ const SOURCE_OPTIONS: { value: LocalLibrarySourceFilter; label: string }[] = [
   { value: 'pdf', label: 'Import PDF' },
 ]
 
-export default function LocalLibraryPage({
-  initialBookId = null,
-  onInitialBookIdConsumed,
-}: {
-  initialBookId?: string | null
-  onInitialBookIdConsumed?: () => void
-}) {
+export default function LocalLibraryPage() {
+  const navigate = useNavigate()
   const {
     books,
     total,
@@ -71,16 +66,8 @@ export default function LocalLibraryPage({
     refresh,
   } = useLocalLibrary()
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const [selectedBookId, setSelectedBookId] = useState<string | null>(initialBookId)
-  const [readingBookId, setReadingBookId] = useState<string | null>(null)
   const [importing, setImporting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (!initialBookId) return
-    setSelectedBookId(initialBookId)
-    onInitialBookIdConsumed?.()
-  }, [initialBookId, onInitialBookIdConsumed])
 
   function setSortGroup(group: (typeof SORT_GROUPS)[number]) {
     setSort(current => (current === group.asc ? group.desc : group.asc))
@@ -128,29 +115,6 @@ export default function LocalLibraryPage({
       setImporting(false)
       input.value = ''
     }
-  }
-
-  if (readingBookId) {
-    return (
-      <LocalLibraryReadPage
-        bookId={readingBookId}
-        onBack={() => setReadingBookId(null)}
-      />
-    )
-  }
-
-  if (selectedBookId) {
-    return (
-      <LocalLibraryDetailPage
-        bookId={selectedBookId}
-        onBack={() => setSelectedBookId(null)}
-        onRead={() => setReadingBookId(selectedBookId)}
-        onDeleted={() => {
-          setSelectedBookId(null)
-          refresh()
-        }}
-      />
-    )
   }
 
   return (
@@ -212,7 +176,7 @@ export default function LocalLibraryPage({
               <LocalLibraryCard
                 key={book.id}
                 book={book}
-                onClick={setSelectedBookId}
+                onClick={id => navigate(localLibraryBookPath(id))}
                 onClearLastRead={handleClearLastRead}
               />
             ))}

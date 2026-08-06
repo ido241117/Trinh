@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { fireEvent, render } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 
 const mocks = vi.hoisted(() => ({
   useLibrary: vi.fn(),
@@ -30,7 +31,6 @@ describe('App repeat-one playback', () => {
   beforeEach(() => {
     localStorage.clear()
     localStorage.setItem('app-active-tab', 'dashboard')
-    vi.restoreAllMocks()
     vi.stubGlobal('fetch', vi.fn())
     vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue()
     vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => {})
@@ -72,7 +72,11 @@ describe('App repeat-one playback', () => {
       setRepeat: vi.fn(),
     })
 
-    const { container } = render(<App />)
+    const { container } = render(
+      <MemoryRouter initialEntries={['/']}>
+        <App />
+      </MemoryRouter>,
+    )
 
     const audio = container.querySelector('audio') as HTMLAudioElement
     audio.currentTime = 42
