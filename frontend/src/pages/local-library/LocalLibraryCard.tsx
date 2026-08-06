@@ -25,12 +25,14 @@ interface Props {
   book: LocalLibraryListItemDTO
   onClick: (id: string) => void
   onClearLastRead?: (bookId: string) => void | Promise<void>
+  onContextMenu?: (event: React.MouseEvent, book: LocalLibraryListItemDTO) => void
 }
 
 export default function LocalLibraryCard({
   book,
   onClick,
   onClearLastRead,
+  onContextMenu,
 }: Props) {
   const coverUrl = getLocalLibraryCoverUrl(book)
   const lengthLabel = book.format === 'pdf' ? 'Số trang' : 'Số từ'
@@ -38,7 +40,13 @@ export default function LocalLibraryCard({
   const hasLastRead = Boolean(book.lastReadAt)
 
   return (
-    <article className="book-card">
+    <article
+      className="book-card"
+      onContextMenu={event => {
+        event.preventDefault()
+        onContextMenu?.(event, book)
+      }}
+    >
       <button type="button" className="book-card-main" onClick={() => onClick(book.id)}>
         <div className="book-card-cover-wrap">
           {coverUrl ? (

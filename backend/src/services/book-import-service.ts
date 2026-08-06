@@ -17,7 +17,7 @@ import { promisify } from 'util'
 import JSZip from 'jszip'
 import { ObjectId } from 'mongodb'
 import sharp from 'sharp'
-import { LOCAL_LIBRARY_CONFIG, refreshStorageMounts, resolveColdStorageMount } from '../config/local-library.js'
+import { LOCAL_LIBRARY_CONFIG } from '../config/local-library.js'
 import {
   getLocalLibraryEpubCollection,
   getLocalLibraryPdfCollection,
@@ -677,7 +677,6 @@ export async function importLocalLibraryFromEpub(
     title,
     cover: coverFile,
     lastUpdate: toDate(source.lastModifiedAt) ?? new Date(),
-    drive: null,
     sizeKb,
     charCount,
     importSourceName,
@@ -747,7 +746,6 @@ export async function importLocalLibraryFromPdf(
     title,
     cover,
     lastUpdate: toDate(source.lastModifiedAt) ?? new Date(),
-    drive: null,
     sizeKb,
     pageCount: metadata.pageCount,
     pdfVersion: metadata.pdfVersion,
@@ -900,17 +898,6 @@ export async function deleteLocalLibraryBook(
   const existing = await collection.findOne({ _id: parsed.objectId })
   if (!existing) {
     throw new LocalLibraryImportError('Book not found', 404)
-  }
-
-  const drive = existing.drive?.trim() || null
-  if (drive && !resolveColdStorageMount(drive)) {
-    await refreshStorageMounts()
-    if (!resolveColdStorageMount(drive)) {
-      throw new LocalLibraryImportError(
-        `Google Drive của ${drive} chưa được mount. Hãy mở Google Drive Desktop rồi thử lại.`,
-        503,
-      )
-    }
   }
 
   const bookFilePath = resolveLocalLibraryFilePath(parsed.source, existing)

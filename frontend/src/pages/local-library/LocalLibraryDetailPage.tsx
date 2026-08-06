@@ -83,15 +83,6 @@ export default function LocalLibraryDetailPage({ bookId, onBack, onRead, onDelet
   }, [bookId])
 
   useEffect(() => {
-    if (book?.driveOffline) {
-      message.warning(
-        `Google Drive của ${book.drive ?? 'tài khoản cold storage'} chưa được mount. `
-        + 'Hãy mở Google Drive Desktop rồi tải lại trang để đọc sách này.',
-      )
-    }
-  }, [book?.driveOffline, book?.drive])
-
-  useEffect(() => {
     if (!book || book.format !== 'epub' || !book.canRead) {
       setTocChapters([])
       setTocError(null)
@@ -321,16 +312,6 @@ export default function LocalLibraryDetailPage({ bookId, onBack, onRead, onDelet
             ) : null}
           </div>
         </div>
-
-        {book.driveOffline ? (
-          <Alert
-            showIcon
-            type="warning"
-            className="book-detail-drive-alert"
-            message="Google Drive chưa được mount"
-            description={`Sách này nằm trên Google Drive của ${book.drive ?? 'tài khoản cold storage'}. Hãy mở Google Drive Desktop rồi tải lại trang.`}
-          />
-        ) : null}
 
         <div className="book-detail-layout">
           <Card className="book-detail-cover-card" bordered={false}>

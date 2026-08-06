@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ObjectId } from 'mongodb'
 import { join } from 'path'
-import { LOCAL_LIBRARY_CONFIG, getStorageMounts } from '../src/config/local-library.js'
+import { LOCAL_LIBRARY_CONFIG } from '../src/config/local-library.js'
 import {
   buildHakoCollectionMatch,
   buildImportCollectionMatch,
@@ -16,62 +16,31 @@ import {
 } from '../src/services/book-read-service.js'
 
 describe('resolveLocalLibraryFilePath', () => {
-  it('resolves hako books on D: when drive is null', () => {
+  it('resolves hako books under OFFLINE_EPUB_DIR', () => {
     const path = resolveLocalLibraryFilePath('hako', {
       _id: new ObjectId(),
       hakoId: '42.epub',
       title: 'Sample',
-      drive: null,
     })
 
     expect(path).toBe(join(LOCAL_LIBRARY_CONFIG.hakoBookDir, '42.epub'))
   })
 
-  it('resolves hako books on cold storage when drive is set', () => {
-    const [email, mount] = Object.entries(getStorageMounts())[0] ?? []
-    if (!email || !mount) {
-      throw new Error('OFFLINE_STORAGE_MOUNTS must be set for cold storage test')
-    }
-
-    const path = resolveLocalLibraryFilePath('hako', {
-      _id: new ObjectId(),
-      hakoId: '42.epub',
-      title: 'Sample',
-      drive: email,
-    })
-
-    expect(path).toBe(join(mount, LOCAL_LIBRARY_CONFIG.hakoSubdir, '42.epub'))
-  })
-
-  it('resolves import books by key under the Import folder on D:', () => {
+  it('resolves import books by key under OFFLINE_IMPORT_DIR', () => {
     const path = resolveLocalLibraryFilePath('epub', {
       _id: new ObjectId(),
       key: 'I24841.epub',
       title: 'Sample',
-      drive: null,
     })
 
     expect(path).toBe(join(LOCAL_LIBRARY_CONFIG.importDir, 'I24841.epub'))
   })
 
-  it('does not resolve lite EPUB for cold-storage or import books', () => {
+  it('does not resolve lite EPUB for import books', () => {
     expect(resolveLocalLibraryLiteFilePath('epub', {
       _id: new ObjectId(),
       key: 'I24841.epub',
       title: 'Sample',
-      drive: null,
-    })).toBeNull()
-
-    const [email] = Object.entries(getStorageMounts())[0] ?? []
-    if (!email) {
-      throw new Error('OFFLINE_STORAGE_MOUNTS must be set for cold storage test')
-    }
-
-    expect(resolveLocalLibraryLiteFilePath('hako', {
-      _id: new ObjectId(),
-      hakoId: '42.epub',
-      title: 'Sample',
-      drive: email,
     })).toBeNull()
   })
 })

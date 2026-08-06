@@ -141,8 +141,6 @@ export interface LocalLibraryDetailDTO extends LocalLibraryListItemDTO {
   canRead?: boolean
   /** Text-only EPUB available for fast first paint (progressive load). */
   hasLiteFile?: boolean
-  drive?: string | null
-  driveOffline?: boolean
   readingProgress?: BookReadingProgressDTO
 }
 

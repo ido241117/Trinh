@@ -21,7 +21,8 @@ export interface LocalLibraryHakoDocument {
   series_url?: string | null
   lastUpdate?: Date | string | null
   charCount?: number | null
-  drive?: string | null  // null = on D:; email = cold storage on Google Drive
+  /** @deprecated Ignored — all books resolve under local D:\Data paths. */
+  drive?: string | null
   sizeKb?: number | null
   lastReadAt?: Date | string | null
   readingProgress?: LocalLibraryReadingProgressDocument
@@ -33,7 +34,8 @@ export interface LocalLibraryImportDocument {
   title: string
   cover?: string | null
   lastUpdate?: Date | string | null
-  drive?: string | null  // null = on D:; email = cold storage on Google Drive
+  /** @deprecated Ignored — all books resolve under local D:\Data paths. */
+  drive?: string | null
   sizeKb?: number | null
   charCount?: number | null
   pageCount?: number | null

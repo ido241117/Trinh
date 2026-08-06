@@ -2,6 +2,55 @@
  * Mobile overrides — file này import SAU books.css.
  * Dùng .local-library-page để specificity cao hơn base .books-grid / .book-card-*.
  */
+
+.local-library-context-menu {
+  position: fixed;
+  z-index: 1200;
+  display: grid;
+  gap: 2px;
+  min-width: 168px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 8px;
+  padding: 6px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-popover);
+}
+
+.local-library-context-menu-item {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  border: 0;
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: transparent;
+  color: var(--color-text);
+  font: 13px/1.2 var(--font-sans);
+  text-align: left;
+  cursor: pointer;
+}
+
+.local-library-context-menu-item:hover:not(:disabled),
+.local-library-context-menu-item:focus-visible:not(:disabled) {
+  background: var(--color-primary-surface);
+  outline: none;
+}
+
+.local-library-context-menu-item:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+.local-library-context-menu-icon {
+  display: inline-flex;
+  min-width: 22px;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  font-size: 13px;
+}
+
 @media (max-width: 768px) {
   .local-library-page.books-page {
     padding: 12px;

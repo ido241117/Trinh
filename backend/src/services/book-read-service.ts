@@ -5,8 +5,6 @@ import JSZip from 'jszip'
 import {
   listAllowedLibraryRoots,
   LOCAL_LIBRARY_CONFIG,
-  refreshStorageMounts,
-  resolveColdStorageMount,
   resolveHakoBookDir,
   resolveImportDir,
 } from '../config/local-library.js'
@@ -126,42 +124,17 @@ function findImportFileByBasename(rootDir: string, basename: string): string | n
   return null
 }
 
-function getDrive(doc: LocalLibraryHakoDocument | LocalLibraryImportDocument): string | null {
-  return doc.drive?.trim() || null
-}
-
-/**
- * True when a book lives on cold storage (Google Drive) but that account's
- * drive is not currently mounted. Callers should treat the file as temporarily
- * unavailable rather than a hard failure.
- */
-export function isColdStorageUnavailable(
-  doc: LocalLibraryHakoDocument | LocalLibraryImportDocument,
-): boolean {
-  const drive = getDrive(doc)
-  return Boolean(drive) && !resolveColdStorageMount(drive)
-}
-
-export function coldStorageUnavailableMessage(drive: string): string {
-  return `Google Drive của ${drive} chưa được mount. Hãy mở Google Drive Desktop rồi thử lại.`
-}
-
 export function resolveLocalLibraryFilePath(
   source: LocalLibrarySource,
   doc: LocalLibraryHakoDocument | LocalLibraryImportDocument,
 ): string | null {
-  const drive = getDrive(doc)
-
-  // Book is on cold storage but the drive isn't mounted -> unresolved (soft fail).
-  if (drive && !resolveColdStorageMount(drive)) return null
-
   if (source === 'hako') {
     const hakoDoc = doc as LocalLibraryHakoDocument
-    return path.win32.join(resolveHakoBookDir(drive), hakoDoc.hakoId)
+    return path.win32.join(resolveHakoBookDir(), hakoDoc.hakoId)
   }
 
   const importDoc = doc as LocalLibraryImportDocument
-  const importRoot = resolveImportDir(drive)
+  const importRoot = resolveImportDir()
   const direct = path.win32.join(importRoot, importDoc.key)
   if (existsSync(direct) && statSync(direct).isFile()) return direct
 
@@ -174,8 +147,8 @@ export function resolveLocalLibraryFilePath(
 }
 
 /**
- * Text-only EPUB under OFFLINE_EPUB_NOPICTURE_DIR (same basename as local hako Book/).
- * Cold-storage and import books are not mirrored — returns null.
+ * Text-only EPUB under OFFLINE_EPUB_NOPICTURE_DIR (same basename as hako Book/).
+ * Import books are not mirrored — returns null.
  */
 export function resolveLocalLibraryLiteFilePath(
   source: LocalLibrarySource,
@@ -183,9 +156,6 @@ export function resolveLocalLibraryLiteFilePath(
 ): string | null {
   const nopictureDir = LOCAL_LIBRARY_CONFIG.hakoBookNopictureDir
   if (!nopictureDir || source !== 'hako') return null
-
-  // Mirror only covers local D:\Data\Book — not Google Drive mounts.
-  if (getDrive(doc)) return null
 
   const hakoDoc = doc as LocalLibraryHakoDocument
   const litePath = path.win32.join(nopictureDir, hakoDoc.hakoId)
@@ -200,12 +170,8 @@ export function resolveLocalLibraryLiteFilePath(
   return litePath
 }
 
-export function resolveLocalLibraryFileRoot(
-  source: LocalLibrarySource,
-  doc: LocalLibraryHakoDocument | LocalLibraryImportDocument,
-): string {
-  const drive = getDrive(doc)
-  return source === 'hako' ? resolveHakoBookDir(drive) : resolveImportDir(drive)
+export function resolveLocalLibraryFileRoot(source: LocalLibrarySource): string {
+  return source === 'hako' ? resolveHakoBookDir() : resolveImportDir()
 }
 
 export type LocalLibraryFileVariant = 'full' | 'lite'
@@ -215,11 +181,6 @@ export function openLocalLibraryFile(
   doc: LocalLibraryHakoDocument | LocalLibraryImportDocument,
   variant: LocalLibraryFileVariant = 'full',
 ) {
-  const drive = getDrive(doc)
-  if (drive && !resolveColdStorageMount(drive)) {
-    throw new LocalLibraryFileError(coldStorageUnavailableMessage(drive), 503)
-  }
-
   if (variant === 'lite') {
     const litePath = resolveLocalLibraryLiteFilePath(source, doc)
     if (!litePath) {
@@ -238,7 +199,7 @@ export function openLocalLibraryFile(
     throw new LocalLibraryFileError('Only .epub and .pdf files can be read', 400)
   }
 
-  const rootDir = resolveLocalLibraryFileRoot(source, doc)
+  const rootDir = resolveLocalLibraryFileRoot(source)
 
   return assertReadableFile(filePath, rootDir, ext)
 }
@@ -628,17 +589,14 @@ export function toLocalLibraryDetailDTO(
   doc: LocalLibraryHakoDocument | LocalLibraryImportDocument,
 ): LocalLibraryDetailDTO {
   const base = toLocalLibraryListItemDTO(row)
-  const driveOffline = isColdStorageUnavailable(doc)
-  const filePath = driveOffline ? undefined : resolveLocalLibraryFilePath(row.source, doc) ?? undefined
-  const hasLiteFile = !driveOffline && Boolean(resolveLocalLibraryLiteFilePath(row.source, doc))
+  const filePath = resolveLocalLibraryFilePath(row.source, doc) ?? undefined
+  const hasLiteFile = Boolean(resolveLocalLibraryLiteFilePath(row.source, doc))
   return {
     ...base,
     pdfVersion: 'pdfVersion' in doc ? doc.pdfVersion ?? undefined : undefined,
     filePath,
     canRead: Boolean(filePath),
     hasLiteFile: hasLiteFile || undefined,
-    drive: doc.drive?.trim() || null,
-    driveOffline,
     readingProgress: toReadingProgressDTO(doc.readingProgress),
   }
 }
@@ -1188,18 +1146,6 @@ export async function getLocalLibraryBookToc(bookId: string): Promise<LocalLibra
     : await getLocalLibraryEpubCollection().findOne({ _id: parsed.objectId })
   if (!doc) {
     throw new LocalLibraryTocError('Book not found', 404)
-  }
-
-  // Google Drive may have mounted after startup — try a fresh scan before failing.
-  if (isColdStorageUnavailable(doc)) {
-    await refreshStorageMounts()
-  }
-  if (isColdStorageUnavailable(doc)) {
-    throw new LocalLibraryTocError(
-      coldStorageUnavailableMessage(doc.drive?.trim() || 'cold storage'),
-      503,
-      'cold_storage_offline',
-    )
   }
 
   // Prefer lite EPUB for TOC — same chapter list, much smaller read on heavy books.

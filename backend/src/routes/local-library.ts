@@ -4,10 +4,7 @@ import { join } from 'path'
 import { Router } from 'express'
 import multer from 'multer'
 import {
-  getColdStorageStatus,
   LOCAL_LIBRARY_CONFIG,
-  refreshStorageMounts,
-  resolveColdStorageMount,
 } from '../config/local-library.js'
 import {
   getLocalLibraryEpubCollection,
@@ -135,16 +132,6 @@ async function findLocalLibraryDocument(source: 'hako' | 'epub' | 'pdf', objectI
 
 export function createLocalLibraryRouter(imgDir = LOCAL_LIBRARY_CONFIG.imgDir) {
   const router = Router()
-
-  router.get('/cold-storage/status', async (req, res) => {
-    try {
-      const refresh = readQueryString(req.query.refresh) === '1'
-      const status = refresh ? await refreshStorageMounts() : getColdStorageStatus()
-      res.json(status)
-    } catch (err) {
-      res.status(500).json({ error: err instanceof Error ? err.message : 'Failed to read cold storage status' })
-    }
-  })
 
   router.get('/', async (req, res) => {
     try {
@@ -346,10 +333,6 @@ export function createLocalLibraryRouter(imgDir = LOCAL_LIBRARY_CONFIG.imgDir) {
       if (!doc) {
         res.status(404).json({ error: 'Book not found' })
         return
-      }
-
-      if (doc.drive?.trim() && !resolveColdStorageMount(doc.drive)) {
-        await refreshStorageMounts()
       }
 
       const variantRaw = readQueryString(req.query.variant)?.toLowerCase()

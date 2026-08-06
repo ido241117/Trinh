@@ -77,10 +77,6 @@ export interface LocalLibraryDetailDTO extends LocalLibraryListItemDTO {
   canRead?: boolean
   /** Text-only EPUB exists under OFFLINE_EPUB_NOPICTURE_DIR (same basename). */
   hasLiteFile?: boolean
-  /** Cold-storage account email (null when the book lives on local disk). */
-  drive?: string | null
-  /** True when the book is on Google Drive but that drive isn't mounted. */
-  driveOffline?: boolean
   readingProgress?: BookReadingProgressDTO
 }
 

@@ -130,6 +130,47 @@ export function useLocalLibrary() {
     loadPage(1, { search, sort, source }, false)
   }, [loadPage, search, sort, source])
 
+  const removeBook = useCallback((bookId: string) => {
+    setBooks(prev => prev.filter(book => book.id !== bookId))
+    setTotal(prev => Math.max(0, prev - 1))
+  }, [])
+
+  /** Reload currently loaded pages without full-page spinner (keeps list mounted for scroll restore). */
+  const softRefresh = useCallback(async () => {
+    const pagesToLoad = Math.max(1, page)
+    const query: LocalLibraryQuery = { search, sort, source }
+    setError(null)
+
+    try {
+      const collected: LocalLibraryListItemDTO[] = []
+      let lastHasMore = false
+      let lastPage = 1
+      let lastTotal = 0
+
+      for (let nextPage = 1; nextPage <= pagesToLoad; nextPage += 1) {
+        const result = await fetchLocalLibrary({
+          q: query.search,
+          page: nextPage,
+          limit: 200,
+          sort: query.sort,
+          source: query.source,
+        })
+        collected.push(...result.items)
+        lastHasMore = result.hasMore
+        lastPage = result.page
+        lastTotal = result.total
+        if (!result.hasMore) break
+      }
+
+      setBooks(collected)
+      setTotal(lastTotal)
+      setPage(lastPage)
+      setHasMore(lastHasMore)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch local library')
+    }
+  }, [page, search, sort, source])
+
   return {
     books,
     total,
@@ -145,5 +186,7 @@ export function useLocalLibrary() {
     error,
     loadMore,
     refresh,
+    softRefresh,
+    removeBook,
   }
 }

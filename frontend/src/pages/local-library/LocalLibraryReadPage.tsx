@@ -231,15 +231,6 @@ export default function LocalLibraryReadPage({ bookId, onBack }: Props) {
     return () => { cancelled = true }
   }, [bookId])
 
-  useEffect(() => {
-    if (book?.driveOffline) {
-      message.warning(
-        `Google Drive của ${book.drive ?? 'tài khoản cold storage'} chưa được mount. `
-        + 'Hãy mở Google Drive Desktop rồi tải lại trang.',
-      )
-    }
-  }, [book?.driveOffline, book?.drive])
-
   const fileUrl = book?.canRead ? getLocalLibraryFileUrl(bookId) : null
   const isEpub = book?.format === 'epub'
   const isPdf = book?.format === 'pdf'
@@ -1005,11 +996,7 @@ export default function LocalLibraryReadPage({ bookId, onBack }: Props) {
               className="book-read-alert"
               type="warning"
               showIcon
-              message={
-                book?.driveOffline
-                  ? `Google Drive của ${book.drive ?? 'tài khoản cold storage'} chưa được mount. Hãy mở Google Drive Desktop rồi tải lại trang.`
-                  : 'Không tìm thấy file sách có đường dẫn đọc được.'
-              }
+              message="Không tìm thấy file sách có đường dẫn đọc được."
             />
           ) : null}
 

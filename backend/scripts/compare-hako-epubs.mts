@@ -55,7 +55,6 @@ type HakoRow = {
   _id: { toHexString(): string }
   hakoId: string
   title?: string
-  drive?: string | null
   sizeKb?: number | null
 }
 
@@ -118,7 +117,7 @@ async function main() {
   const col = getLocalLibraryDb().collection<HakoRow>('books_hako')
   const mongoCount = await col.countDocuments()
   const docs = await col
-    .find({}, { projection: { hakoId: 1, title: 1, drive: 1, sizeKb: 1 } })
+    .find({}, { projection: { hakoId: 1, title: 1, sizeKb: 1 } })
     .toArray()
 
   const mongoById = new Map<string, HakoRow>()
@@ -135,22 +134,12 @@ async function main() {
   const missingOnDisk = mongoIds.filter(id => !diskSet.has(id))
   const orphanOnDisk = diskNames.filter(name => !mongoById.has(name.toLowerCase()))
 
-  const driveGroups = new Map<string, number>()
-  for (const doc of docs) {
-    const key = doc.drive?.trim() || '(local/null)'
-    driveGroups.set(key, (driveGroups.get(key) ?? 0) + 1)
-  }
-
   console.log('\n=== Compare: disk ↔ MongoDB books_hako ===')
   console.log(`Mongo documents: ${mongoCount}`)
   console.log(`Mongo unique hakoId: ${mongoById.size}`)
   if (dupHakoIds.length) console.log(`Duplicate hakoId in Mongo: ${dupHakoIds.length}`)
   console.log(`Missing on disk (in Mongo, no file): ${missingOnDisk.length}`)
   console.log(`Orphan on disk (file, not in Mongo): ${orphanOnDisk.length}`)
-  console.log('Drive breakdown:')
-  for (const [drive, n] of [...driveGroups.entries()].sort((a, b) => b[1] - a[1])) {
-    console.log(`  ${drive}: ${n}`)
-  }
 
   if (missingOnDisk.length) {
     console.log('\nSample missing on disk (up to 20):')
@@ -177,7 +166,6 @@ async function main() {
     missingOnDisk,
     orphanOnDisk,
     matched: matched.length,
-    driveGroups: Object.fromEntries(driveGroups),
     comparedAt: new Date().toISOString(),
   }
   writeFileSync(reportPath, JSON.stringify(compareReport, null, 2))
@@ -197,13 +185,11 @@ async function main() {
   } = await import('../src/services/book-read-service.js')
   const { toLocalLibraryItemId } = await import('../src/models/local-library.model.js')
 
-  let targets = matched.filter(doc => !doc.drive?.trim()) // only local D: files under EPUB_DIR
-  const skippedCold = matched.length - targets.length
+  let targets = matched
   if (LIMIT > 0) targets = targets.slice(0, LIMIT)
 
   console.log('\n=== Stress test (service + copy/move/zip) ===')
-  console.log(`Targets (local drive=null): ${targets.length}`)
-  if (skippedCold) console.log(`Skipped cold-storage docs: ${skippedCold}`)
+  console.log(`Targets: ${targets.length}`)
   console.log(`Concurrency: ${CONCURRENCY}`)
 
   const workRoot = path.join(tmpdir(), `hako-epub-stress-${Date.now()}`)
