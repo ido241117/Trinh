@@ -10,6 +10,7 @@ export const TAB_PATHS: Record<Tab, string> = {
   journal: '/journal',
   'ai-quota': '/ai-quota',
   accounts: '/accounts',
+  services: '/services',
 }
 
 export function isTab(value: string | null): value is Tab {
@@ -20,6 +21,7 @@ export function isTab(value: string | null): value is Tab {
     || value === 'journal'
     || value === 'ai-quota'
     || value === 'accounts'
+    || value === 'services'
 }
 
 export function tabFromPathname(pathname: string): Tab | null {

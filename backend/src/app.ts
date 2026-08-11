@@ -12,6 +12,7 @@ import { createLocalLibraryRouter } from './routes/local-library.js'
 import { createAiQuotaRouter } from './routes/ai-quota.js'
 import { createAccountsRouter } from './routes/accounts.js'
 import { createDashboardRouter } from './routes/dashboard.js'
+import { createServicesRouter } from './routes/services.js'
 import { LOCAL_LIBRARY_CONFIG } from './config/local-library.js'
 import { MUSIC_CONFIG } from './config/music.js'
 import { JOURNAL_CONFIG } from './config/journal.js'
@@ -44,6 +45,7 @@ export function createApp() {
   app.use('/api/ai-quota', createAiQuotaRouter(AI_QUOTA_CONFIG.iconDir))
   app.use('/api/accounts', createAccountsRouter(ACCOUNTS_CONFIG.logoDir))
   app.use('/api/dashboard', createDashboardRouter(DASHBOARD_CONFIG.backgroundDir))
+  app.use('/api/services', createServicesRouter())
 
   if (existsSync(frontendDist)) {
     app.use(express.static(frontendDist))

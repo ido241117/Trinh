@@ -1,0 +1,59 @@
+.ops-services-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 16px 20px;
+  gap: 12px;
+}
+
+.ops-services-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.ops-services-panel {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 12px;
+}
+
+.ops-services-spin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 240px;
+}
+
+.ops-service-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ops-service-id {
+  font-size: 12px;
+}
+
+.ops-services-row {
+  cursor: pointer;
+}
+
+.ops-services-panel .ant-table-wrapper,
+.ops-services-panel .ant-spin-nested-loading,
+.ops-services-panel .ant-spin-container,
+.ops-services-panel .ant-table {
+  height: 100%;
+}
+
+.ops-services-panel .ant-table-container {
+  height: 100%;
+}

@@ -14,6 +14,7 @@ import LocalLibraryReadRoute from './pages/local-library/LocalLibraryReadRoute'
 import JournalPage from './pages/journal'
 import { AiQuotaPage } from './pages/ai-quota'
 import AccountsPage from './pages/accounts'
+import ServicesPage from './pages/services'
 import DashboardPage from './pages/dashboard'
 import Player from './components/Player/Player'
 import { AppThemeProvider, type AppTheme } from './context/AppThemeContext'
@@ -274,6 +275,7 @@ export default function App() {
               <Route path="/journal" element={<JournalPage onTrackClick={play} />} />
               <Route path="/ai-quota" element={<AiQuotaPage />} />
               <Route path="/accounts" element={<AccountsPage />} />
+              <Route path="/services" element={<ServicesPage />} />
               <Route path="*" element={<Navigate to={TAB_PATHS.music} replace />} />
             </Routes>
           </div>

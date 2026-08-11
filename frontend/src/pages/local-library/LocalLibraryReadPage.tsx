@@ -16,6 +16,7 @@ import type { PDFDocumentProxy, RenderTask } from 'pdfjs-dist/types/src/display/
 import { fetchLocalLibraryBook, getLocalLibraryFileUrl, updateLocalLibraryLastRead, updateLocalLibraryReadingProgress } from '../../api'
 import {
   buildReaderStyleCss,
+  chapterLabelFromSpinePath,
   isRelativeAsset,
   mimeForExtension,
   parseEpubSpine,
@@ -965,12 +966,13 @@ export default function LocalLibraryReadPage({ bookId, onBack }: Props) {
               onClick={() => setChromeOpen(false)}
             />
             <aside className="book-read-sidebar">
-              {spine.map((_, index) => (
+              {spine.map((chapterPath, index) => (
                 <button
-                  key={index}
+                  key={chapterPath}
                   type="button"
                   className={`book-read-chapter-item${index === chapterIndex ? ' is-active' : ''}`}
                   disabled={isLoading}
+                  title={chapterPath}
                   onClick={() => {
                     void goToChapter(index)
                     if (typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches) {
@@ -978,7 +980,7 @@ export default function LocalLibraryReadPage({ bookId, onBack }: Props) {
                     }
                   }}
                 >
-                  Chương {index + 1}
+                  {chapterLabelFromSpinePath(chapterPath)}
                 </button>
               ))}
               {!spine.length ? (

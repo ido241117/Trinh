@@ -227,3 +227,41 @@ export interface DashboardSettingsDTO {
   updatedAt: string
 }
 
+export type OpsProbeDTO = {
+  label: string
+  url: string
+  online: boolean
+  status: number | null
+  latencyMs: number | null
+  error?: string
+}
+
+export type OpsServiceDTO = {
+  id: string
+  name: string
+  description: string
+  canStart: boolean
+  canStop: boolean
+  canDeploy: boolean
+  busy: 'start' | 'stop' | 'deploy' | null
+  open: string | null
+  health: {
+    probed: boolean
+    online: boolean
+    allOnline: boolean
+    probes: OpsProbeDTO[]
+  }
+}
+
+export type OpsActionResult = {
+  ok: boolean
+  id: string
+  action: string
+  command: string
+  stdout: string
+  stderr: string
+  exitCode: number | null
+  async?: boolean
+  error?: string
+}
+

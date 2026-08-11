@@ -72,6 +72,12 @@ export function mimeForExtension(extension: string) {
   )
 }
 
+/** Basename of a spine href with .html / .xhtml / .htm stripped (e.g. OEBPS/Ch_01.xhtml → Ch_01). */
+export function chapterLabelFromSpinePath(path: string) {
+  const base = path.split('/').pop() ?? path
+  return base.replace(/\.(xhtml|html|htm)$/i, '') || base
+}
+
 export async function parseEpubSpine(data: ArrayBuffer) {
   const zip = await JSZip.loadAsync(data)
   const parser = new DOMParser()

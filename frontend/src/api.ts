@@ -16,6 +16,8 @@ import type {
   DashboardBackgroundTheme,
   FetchLibraryParams,
   LibraryPageResponse,
+  OpsServiceDTO,
+  OpsActionResult,
 } from './types'
 
 function buildLibraryQuery(params?: FetchLibraryParams): string {
@@ -690,5 +692,46 @@ export async function updateAccount(
 export async function deleteAccount(id: string): Promise<void> {
   const res = await fetch(`/api/accounts/${encodeURIComponent(id)}`, { method: 'DELETE' })
   if (!res.ok) throw new Error('Failed to delete account')
+}
+
+export async function fetchOpsServices(): Promise<OpsServiceDTO[]> {
+  const res = await fetch('/api/services')
+  if (!res.ok) throw new Error('Failed to fetch services')
+  const data = await res.json()
+  return data.services as OpsServiceDTO[]
+}
+
+export async function checkOpsServices(): Promise<OpsServiceDTO[]> {
+  const res = await fetch('/api/services/check', { method: 'POST' })
+  if (!res.ok) throw new Error('Failed to check services')
+  const data = await res.json()
+  return data.services as OpsServiceDTO[]
+}
+
+export async function checkOpsService(id: string): Promise<OpsServiceDTO> {
+  const res = await fetch(`/api/services/${encodeURIComponent(id)}/check`, { method: 'POST' })
+  if (!res.ok) throw new Error('Failed to check service')
+  return res.json()
+}
+
+export async function startOpsService(id: string): Promise<OpsActionResult> {
+  const res = await fetch(`/api/services/${encodeURIComponent(id)}/start`, { method: 'POST' })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error ?? 'Start failed')
+  return data as OpsActionResult
+}
+
+export async function stopOpsService(id: string): Promise<OpsActionResult> {
+  const res = await fetch(`/api/services/${encodeURIComponent(id)}/stop`, { method: 'POST' })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error ?? 'Stop failed')
+  return data as OpsActionResult
+}
+
+export async function deployOpsService(id: string): Promise<OpsActionResult> {
+  const res = await fetch(`/api/services/${encodeURIComponent(id)}/deploy`, { method: 'POST' })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error ?? 'Deploy failed')
+  return data as OpsActionResult
 }
 
