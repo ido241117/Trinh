@@ -86,8 +86,15 @@
   vertical-align: middle;
 }
 
+/* Keep virtual rows at a fixed height so the last track stays scrollable/visible. */
+.music-table-wrap .music-track-title {
+  -webkit-line-clamp: 1;
+}
+
 .music-row {
   cursor: pointer;
+  height: 61px;
+  box-sizing: border-box;
 }
 
 .music-row:hover > td {

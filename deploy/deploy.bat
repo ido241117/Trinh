@@ -50,7 +50,7 @@ call "%~dp0stop.bat" >> "%LOG%" 2>&1
 echo.
 echo === Khoi dong backend moi ===
 echo %TIME% start /force>> "%LOG%"
-wscript.exe //B "%~dp0start.vbs" /silent /force
+wscript.exe //B "%~dp0start-prod.vbs" /silent /force
 
 echo.
 echo Deploy xong. Backend :2411

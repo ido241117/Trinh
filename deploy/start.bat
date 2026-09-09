@@ -1,5 +1,13 @@
 @echo off
-REM Khoi dong app o che do prod, chay an (khong terminal backend).
-REM Chi la wrapper goi start.vbs - ban co the double-click start.vbs truc tiep.
-cd /d "%~dp0"
-start "" wscript.exe "%~dp0start.vbs"
+REM Dev nhanh: backend :2108 + Vite :2413 — mot terminal, npm run dev
+cd /d "%~dp0.."
+
+echo.
+echo === DEV (APP DANG TEST) ===
+echo Backend  http://localhost:2108
+echo Frontend http://localhost:2413
+echo Ctrl+C de dung
+echo.
+
+start /b cmd /c "timeout /t 3 /nobreak >nul && start "" http://localhost:2413"
+call npm run dev

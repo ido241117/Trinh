@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Badge,
   Button,
+  Checkbox,
+  Dropdown,
   Space,
   Spin,
   Table,
@@ -10,10 +12,13 @@ import {
   Typography,
   message,
 } from 'antd'
+import type { CheckboxChangeEvent } from 'antd/es/checkbox'
 import type { ColumnsType } from 'antd/es/table'
 import {
   CloudUploadOutlined,
+  DownOutlined,
   ExportOutlined,
+  FilterOutlined,
   PlayCircleOutlined,
   PoweroffOutlined,
   ReloadOutlined,
@@ -32,6 +37,31 @@ import './services.css'
 const { Text, Title } = Typography
 
 type RowAction = 'start' | 'stop' | 'deploy' | 'check'
+type ServiceGroup = 'apps' | 'infra'
+
+const INFRA_SERVICE_IDS = new Set(['docker-desktop', 'tunnel', 'tailscale'])
+const ALL_GROUPS: ServiceGroup[] = ['apps', 'infra']
+
+const GROUP_OPTIONS: {
+  key: ServiceGroup
+  label: string
+  hint: string
+}[] = [
+  {
+    key: 'apps',
+    label: 'Apps',
+    hint: 'Software Domain, LAN, Map, MOVE, Medic, Sneat, Forgejo…',
+  },
+  {
+    key: 'infra',
+    label: 'Infrastructure',
+    hint: 'Docker Desktop, Cloudflare Tunnel, Tailscale',
+  },
+]
+
+function serviceGroup(id: string): ServiceGroup {
+  return INFRA_SERVICE_IDS.has(id) ? 'infra' : 'apps'
+}
 
 function statusTag(svc: OpsServiceDTO, checking: boolean) {
   if (checking) return <Tag color="processing">Checking…</Tag>
@@ -100,6 +130,7 @@ export default function ServicesPage() {
   const [checkingAll, setCheckingAll] = useState(false)
   const [rowAction, setRowAction] = useState<Record<string, RowAction>>({})
   const [scrollY, setScrollY] = useState(360)
+  const [groups, setGroups] = useState<ServiceGroup[]>(ALL_GROUPS)
 
   const loadList = useCallback(async () => {
     try {
@@ -143,9 +174,20 @@ export default function ServicesPage() {
     const observer = new ResizeObserver(updateScrollY)
     observer.observe(element)
     return () => observer.disconnect()
-  }, [items.length, loading])
+  }, [items.length, loading, groups])
 
   const anyBusy = Object.keys(rowAction).length > 0 || checkingAll
+
+  const toggleGroup = useCallback((key: ServiceGroup, checked: boolean) => {
+    setGroups(prev => {
+      if (checked) {
+        return ALL_GROUPS.filter(g => prev.includes(g) || g === key)
+      }
+      // Keep at least one group so the table never goes blank by accident.
+      if (prev.length <= 1 && prev.includes(key)) return prev
+      return prev.filter(g => g !== key)
+    })
+  }, [])
 
   const patchService = useCallback((next: OpsServiceDTO) => {
     setItems(prev => sortServices(prev.map(s => (s.id === next.id ? next : s))))
@@ -220,6 +262,42 @@ export default function ServicesPage() {
   }, [patchService, waitUntilReady])
 
   const sorted = useMemo(() => sortServices(items), [items])
+
+  const filtered = useMemo(() => {
+    const active = new Set(groups)
+    return sorted.filter(svc => active.has(serviceGroup(svc.id)))
+  }, [sorted, groups])
+
+  const filterActive = groups.length < ALL_GROUPS.length
+
+  const filterMenu = (
+    <div className="ops-services-filter-panel" onClick={e => e.stopPropagation()}>
+      <Text type="secondary" className="ops-services-filter-title">
+        Hiện nhóm
+      </Text>
+      <div className="ops-services-filter-list">
+        {GROUP_OPTIONS.map(opt => {
+          const checked = groups.includes(opt.key)
+          const locked = checked && groups.length === 1
+          return (
+            <label key={opt.key} className="ops-services-filter-item">
+              <Checkbox
+                checked={checked}
+                disabled={locked}
+                onChange={(e: CheckboxChangeEvent) => {
+                  toggleGroup(opt.key, e.target.checked)
+                }}
+              />
+              <span className="ops-services-filter-copy">
+                <Text strong>{opt.label}</Text>
+                <Text type="secondary">{opt.hint}</Text>
+              </span>
+            </label>
+          )
+        })}
+      </div>
+    </div>
+  )
 
   const columns: ColumnsType<OpsServiceDTO> = useMemo(
     () => [
@@ -331,16 +409,29 @@ export default function ServicesPage() {
         <div>
           <Title level={4} style={{ margin: 0 }}>Services</Title>
           <Text type="secondary">
-            Ops LAN — check port local · Cloudflare on/off · Start / Deploy / Stop
+            Ops LAN — check port local · Docker / Cloudflare on/off · Start / Deploy / Stop
           </Text>
         </div>
-        <Button
-          icon={<ReloadOutlined />}
-          loading={checkingAll}
-          onClick={() => void checkAll()}
-        >
-          Check all
-        </Button>
+        <Space size={8} wrap className="ops-services-toolbar-actions">
+          <Dropdown
+            trigger={['click']}
+            placement="bottomRight"
+            popupRender={() => filterMenu}
+          >
+            <Button icon={<FilterOutlined />}>
+              Filter
+              {filterActive ? ` (${groups.length})` : ''}
+              <DownOutlined style={{ fontSize: 10, marginLeft: 4 }} />
+            </Button>
+          </Dropdown>
+          <Button
+            icon={<ReloadOutlined />}
+            loading={checkingAll}
+            onClick={() => void checkAll()}
+          >
+            Check all
+          </Button>
+        </Space>
       </div>
 
       <div className="ops-services-panel" ref={panelRef}>
@@ -352,7 +443,7 @@ export default function ServicesPage() {
           <Table<OpsServiceDTO>
             rowKey="id"
             columns={columns}
-            dataSource={sorted}
+            dataSource={filtered}
             pagination={false}
             size="middle"
             scroll={{ y: scrollY, x: 980 }}

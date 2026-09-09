@@ -1,7 +1,8 @@
 import { Buffer } from 'node:buffer'
-import { existsSync } from 'fs'
+import { copyFileSync, existsSync } from 'fs'
 import { basename, join } from 'path'
 import { spawn } from 'child_process'
+import { tmpdir } from 'os'
 import NodeID3 from 'node-id3'
 import sharp from 'sharp'
 import { withMtimePreserved } from './music-service.js'
@@ -240,12 +241,22 @@ function isEnvTrue(value: string | undefined): boolean {
   return value?.trim().toLowerCase() === 'true'
 }
 
+/** yt-dlp ghi đè file --cookies sau mỗi lần chạy — copy sang temp để giữ bản gốc. */
+function resolveYtdlpCookiesPath(): string | null {
+  const sourcePath = process.env.YTDLP_YOUTUBE_COOKIES_FILE?.trim()
+  if (!sourcePath || !existsSync(sourcePath)) return null
+
+  const jarPath = join(tmpdir(), 'software-lan-ytdlp-cookies.txt')
+  copyFileSync(sourcePath, jarPath)
+  return jarPath
+}
+
 export function buildYtdlpBaseArgs(): string[] {
   const args = ['--js-runtimes', 'node']
 
   if (isEnvTrue(process.env.YTDLP_YOUTUBE_COOKIES)) {
-    const cookiesPath = process.env.YTDLP_YOUTUBE_COOKIES_FILE?.trim()
-    if (cookiesPath && existsSync(cookiesPath)) {
+    const cookiesPath = resolveYtdlpCookiesPath()
+    if (cookiesPath) {
       args.push('--cookies', cookiesPath)
     }
   }
@@ -253,20 +264,56 @@ export function buildYtdlpBaseArgs(): string[] {
   return args
 }
 
+/** Lấy dòng ERROR: cuối cùng — toast UI không xem log SSE. */
+export function formatYtdlpFailure(
+  stderr: string,
+  code: number | null,
+  fallback: string,
+): string {
+  const lines = stderr.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
+  const errors = lines.filter((line) => /^ERROR:/i.test(line))
+  if (errors.length > 0) {
+    const msg = errors[errors.length - 1]
+    if (/403.*Forbidden/i.test(msg)) {
+      return `${msg} — cập nhật yt-dlp: python -m pip install -U yt-dlp`
+    }
+    return msg
+  }
+
+  const useful = lines.filter((line) => !line.startsWith('[debug]'))
+  if (useful.length > 0) {
+    return useful[useful.length - 1]
+  }
+
+  return `${fallback} (mã ${code ?? '?'})`
+}
+
 function runYtdlp(args: string[], url: string): Promise<{ stdout: string; stderr: string; code: number | null }> {
   return new Promise((resolve) => {
     const proc = spawn('yt-dlp', [...buildYtdlpBaseArgs(), ...args, url], {
       env: { ...process.env, PYTHONUTF8: '1' },
+      windowsHide: true,
     })
 
     let stdout = ''
     let stderr = ''
+    let settled = false
+
+    const finish = (code: number | null) => {
+      if (settled) return
+      settled = true
+      resolve({ stdout, stderr, code })
+    }
 
     proc.stdout.setEncoding('utf8')
     proc.stderr.setEncoding('utf8')
     proc.stdout.on('data', (chunk: string) => { stdout += chunk })
     proc.stderr.on('data', (chunk: string) => { stderr += chunk })
-    proc.on('close', (code) => resolve({ stdout, stderr, code }))
+    proc.on('error', (err) => {
+      stderr = stderr.trim() || err.message
+      finish(1)
+    })
+    proc.on('close', (code) => finish(code))
   })
 }
 
@@ -277,7 +324,7 @@ export async function fetchYtdlpMetadata(url: string): Promise<YtdlpVideoMeta> {
   )
 
   if (code !== 0) {
-    throw new Error(stderr.trim() || `yt-dlp metadata failed with code ${code}`)
+    throw new Error(formatYtdlpFailure(stderr, code, 'yt-dlp metadata failed'))
   }
 
   const data = JSON.parse(stdout) as { title?: string; id?: string }
@@ -306,7 +353,7 @@ async function fetchPredictedBasename(url: string, outputTemplate: string): Prom
 
   const value = stdout.trim()
   if (code !== 0 || !value) {
-    throw new Error(stderr.trim() || `yt-dlp --print filename failed with code ${code}`)
+    throw new Error(formatYtdlpFailure(stderr, code, 'yt-dlp --print filename failed'))
   }
 
   return normalizeMp3Basename(value)

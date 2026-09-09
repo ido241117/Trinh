@@ -1,21 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { ConfigProvider, theme } from 'antd'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { usePlayer } from './hooks/usePlayer'
 import { useLibrary } from './hooks/useLibrary'
 import { useMediaQuery } from './hooks/useMediaQuery'
 import Sidebar from './components/Sidebar/Sidebar'
-import MusicMvpPage from './pages/music'
 import { NowPlayingProvider } from './pages/music/MusicNowPlayingContext'
-import WatchlistPage from './pages/watchlist'
-import LocalLibraryPage from './pages/local-library'
-import LocalLibraryDetailRoute from './pages/local-library/LocalLibraryDetailRoute'
-import LocalLibraryReadRoute from './pages/local-library/LocalLibraryReadRoute'
-import JournalPage from './pages/journal'
-import { AiQuotaPage } from './pages/ai-quota'
-import AccountsPage from './pages/accounts'
-import ServicesPage from './pages/services'
-import DashboardPage from './pages/dashboard'
 import Player from './components/Player/Player'
 import { AppThemeProvider, type AppTheme } from './context/AppThemeContext'
 import {
@@ -26,6 +16,25 @@ import {
   tabFromPathname,
 } from './routes/paths'
 import './index.css'
+
+const DashboardPage = lazy(() => import('./pages/dashboard'))
+const MusicMvpPage = lazy(() => import('./pages/music'))
+const WatchlistPage = lazy(() => import('./pages/watchlist'))
+const LocalLibraryPage = lazy(() => import('./pages/local-library'))
+const LocalLibraryDetailRoute = lazy(() => import('./pages/local-library/LocalLibraryDetailRoute'))
+const LocalLibraryReadRoute = lazy(() => import('./pages/local-library/LocalLibraryReadRoute'))
+const JournalPage = lazy(() => import('./pages/journal'))
+const AiQuotaPage = lazy(() => import('./pages/ai-quota'))
+const AccountsPage = lazy(() => import('./pages/accounts'))
+const ServicesPage = lazy(() => import('./pages/services'))
+
+function PageFallback() {
+  return (
+    <div className="h-full w-full flex items-center justify-center text-[var(--color-text-muted)]">
+      Đang tải…
+    </div>
+  )
+}
 
 const THEME_STORAGE_KEY = 'app-theme'
 const VOLUME_STORAGE_KEY = 'player-volume'
@@ -219,7 +228,8 @@ export default function App() {
           />
 
           <div className="app-shell-main flex-1 min-h-0 overflow-hidden">
-            <Routes>
+            <Suspense fallback={<PageFallback />}>
+              <Routes>
               <Route path="/" element={<Navigate to={defaultPathFromStorage()} replace />} />
               <Route
                 path="/dashboard"
@@ -278,6 +288,7 @@ export default function App() {
               <Route path="/services" element={<ServicesPage />} />
               <Route path="*" element={<Navigate to={TAB_PATHS.music} replace />} />
             </Routes>
+            </Suspense>
           </div>
         </div>
 

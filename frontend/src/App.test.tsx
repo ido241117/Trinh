@@ -1,7 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import App from './App'
+
+const PAGE_LOAD_TIMEOUT_MS = 15_000
 
 function renderApp(initialEntries: string[] = ['/']) {
   return render(
@@ -10,6 +12,13 @@ function renderApp(initialEntries: string[] = ['/']) {
     </MemoryRouter>,
   )
 }
+
+beforeAll(async () => {
+  await Promise.all([
+    import('./pages/music'),
+    import('./pages/watchlist'),
+  ])
+})
 
 beforeEach(() => {
   localStorage.clear()
@@ -22,7 +31,8 @@ beforeEach(() => {
 describe('App', () => {
   it('renders without crashing', async () => {
     renderApp()
-    await waitFor(() => expect(screen.getByRole('main')).toBeInTheDocument())
+    expect(screen.getByTitle('Music')).toBeInTheDocument()
+    await screen.findByRole('searchbox', {}, { timeout: PAGE_LOAD_TIMEOUT_MS })
   })
 
   it('renders sidebar with Music, Watchlist, and Offline Library nav items', async () => {
@@ -32,25 +42,24 @@ describe('App', () => {
     expect(screen.getByTitle('Offline Library')).toBeInTheDocument()
     expect(screen.queryByTitle('Download')).not.toBeInTheDocument()
     expect(screen.queryByTitle('Settings')).not.toBeInTheDocument()
+    await screen.findByRole('searchbox', {}, { timeout: PAGE_LOAD_TIMEOUT_MS })
   })
 
   it('shows Music page by default', async () => {
     renderApp()
-    await waitFor(() => expect(screen.getByRole('main')).toBeInTheDocument())
-    // Music page has search input
-    expect(screen.getByRole('searchbox')).toBeInTheDocument()
+    expect(await screen.findByRole('searchbox', {}, { timeout: PAGE_LOAD_TIMEOUT_MS })).toBeInTheDocument()
   })
 
   it('switches to Watchlist page when clicking Watchlist tab', async () => {
     renderApp()
     fireEvent.click(screen.getByTitle('Watchlist'))
-    await waitFor(() =>
-      expect(screen.getByText(/LEGACY PLAYLIST/i)).toBeInTheDocument()
-    )
+    expect(await screen.findByText(/LEGACY PLAYLIST/i, {}, { timeout: PAGE_LOAD_TIMEOUT_MS })).toBeInTheDocument()
   })
 
   it('floating player is hidden when no track is loaded', async () => {
     renderApp()
+    expect(screen.queryByLabelText('Music player')).toBeNull()
+    await screen.findByRole('searchbox', {}, { timeout: PAGE_LOAD_TIMEOUT_MS })
     expect(screen.queryByLabelText('Music player')).toBeNull()
   })
 })

@@ -267,3 +267,5 @@ export function AiQuotaPage() {
     </section>
   )
 }
+
+export default AiQuotaPage

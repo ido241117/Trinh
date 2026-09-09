@@ -5,6 +5,7 @@ import { mkdir } from 'fs/promises'
 import { spawn } from 'child_process'
 import {
   buildYtdlpBaseArgs,
+  formatYtdlpFailure,
   patchMp3CoverFromYoutubeUrl,
   resolveYtdlpDownloadTarget,
 } from '../services/youtube-service.js'
@@ -95,6 +96,7 @@ export function createYtdlpRouter(musicFolder: string, imgDir: string) {
 
     let outputTemplate: string
     let outputPath = ''
+    send('log', 'Đang lấy thông tin video...')
     try {
       const target = await resolveYtdlpDownloadTarget(musicFolder, url)
       outputTemplate = target.outputTemplate
@@ -117,11 +119,21 @@ export function createYtdlpRouter(musicFolder: string, imgDir: string) {
       url,
     ], {
       env: { ...process.env, PYTHONUTF8: '1' },
+      windowsHide: true,
     })
 
     proc.stdout.setEncoding('utf8')
     proc.stderr.setEncoding('utf8')
     let actualOutputPath = ''
+    let stderr = ''
+    let settled = false
+
+    const fail = (msg: string) => {
+      if (settled) return
+      settled = true
+      send('error', msg)
+      res.end()
+    }
 
     proc.stdout.on('data', (chunk: string) => {
       for (const line of chunk.split('\n')) {
@@ -135,12 +147,18 @@ export function createYtdlpRouter(musicFolder: string, imgDir: string) {
     })
 
     proc.stderr.on('data', (chunk: string) => {
+      stderr += chunk
       for (const line of chunk.split('\n')) {
         if (line.trim()) send('log', line)
       }
     })
 
+    proc.on('error', (err) => {
+      fail(err.message)
+    })
+
     proc.on('close', (code: number | null) => {
+      if (settled) return
       if (code === 0) {
         void (async () => {
           try {
@@ -159,6 +177,7 @@ export function createYtdlpRouter(musicFolder: string, imgDir: string) {
               (await findNewestMp3InDirectory(musicFolder))
 
             if (!downloadPath) {
+              settled = true
               send('error', 'Không tìm được file MP3 mới sau khi tải')
               res.end()
               return
@@ -181,12 +200,12 @@ export function createYtdlpRouter(musicFolder: string, imgDir: string) {
             const msg = err instanceof Error ? err.message : 'Không index được bài mới'
             send('error', msg)
           } finally {
+            settled = true
             res.end()
           }
         })()
       } else {
-        send('error', `yt-dlp thoát với mã lỗi ${code}`)
-        res.end()
+        fail(formatYtdlpFailure(stderr, code, 'yt-dlp thoát với mã lỗi'))
       }
     })
 

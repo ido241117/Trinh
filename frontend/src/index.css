@@ -183,6 +183,16 @@ html.dark {
   min-width: 0;
 }
 
+.app-message-error.ant-message-notice {
+  cursor: pointer;
+  max-width: min(92vw, 42rem);
+}
+
+.app-message-error .ant-message-notice-title {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 @media (max-width: 768px) {
   :root {
     --app-bottom-nav-height: calc(3.75rem + env(safe-area-inset-bottom, 0px));

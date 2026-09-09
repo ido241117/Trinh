@@ -56,9 +56,80 @@ async function probeProcess(target: HealthTarget): Promise<ProbeResult> {
   }
 }
 
+async function probeCommand(target: HealthTarget): Promise<ProbeResult> {
+  const started = Date.now()
+  const url = target.url || `command://${target.command || 'unknown'}`
+  const bin = target.command?.trim()
+  if (!bin) {
+    return {
+      label: target.label,
+      url,
+      online: false,
+      status: null,
+      latencyMs: null,
+      error: 'missing command',
+    }
+  }
+
+  try {
+    const { stdout } = await execFileAsync(bin, target.commandArgs || [], {
+      windowsHide: true,
+      timeout: SERVICES_CONFIG.probeTimeoutMs,
+    })
+    const text = stdout.toString()
+    let online = false
+    let detail: string | undefined
+
+    if (target.jsonField) {
+      try {
+        const data = JSON.parse(text) as Record<string, unknown>
+        const value = data[target.jsonField]
+        const actual = value == null ? '' : String(value)
+        const expected = target.jsonEquals ?? 'Running'
+        online = actual === expected
+        detail = online ? undefined : `${target.jsonField}=${actual || '(empty)'}`
+      } catch (err) {
+        return {
+          label: target.label,
+          url,
+          online: false,
+          status: null,
+          latencyMs: Date.now() - started,
+          error: err instanceof Error ? err.message : 'invalid JSON from command',
+        }
+      }
+    } else {
+      const expect = target.expect
+      online = !expect || text.toLowerCase().includes(expect.toLowerCase())
+      detail = online ? undefined : expect ? `missing expect "${expect}"` : 'command empty'
+    }
+
+    return {
+      label: target.label,
+      url,
+      online,
+      status: online ? 200 : null,
+      latencyMs: Date.now() - started,
+      error: detail,
+    }
+  } catch (err) {
+    return {
+      label: target.label,
+      url,
+      online: false,
+      status: null,
+      latencyMs: null,
+      error: err instanceof Error ? err.message : String(err),
+    }
+  }
+}
+
 export async function probeUrl(target: HealthTarget): Promise<ProbeResult> {
   if (target.kind === 'process' || /^process:\/\//i.test(target.url)) {
     return probeProcess(target)
+  }
+  if (target.kind === 'command' || /^command:\/\//i.test(target.url)) {
+    return probeCommand(target)
   }
 
   const started = Date.now()

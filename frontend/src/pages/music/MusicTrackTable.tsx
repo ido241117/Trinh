@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState, type ComponentProps, type UIEvent } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from 'react'
 import { CustomerServiceOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons'
 import { Avatar, Button, Empty, Select, Space, Table, Tooltip, Typography } from 'antd'
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table'
@@ -10,15 +10,22 @@ import { useDeferredNowPlayingId } from './MusicNowPlayingContext'
 import MusicTableRow from './MusicTableRow'
 
 const TABLE_SCROLL_X_DESKTOP = 868
-const VIRTUAL_ROW_HEIGHT = 60
+/** Must match rendered desktop row height (avatar 40 + cell padding 20 + border). */
+const VIRTUAL_ROW_HEIGHT = 61
 const MOBILE_VIRTUAL_ROW_HEIGHT = 86
 const MOBILE_OVERSCAN_ROWS = 6
 const MOBILE_LOAD_MORE_THRESHOLD_PX = 240
+/** Reserve space for table chrome / horizontal scrollbar so the last row stays visible. */
+const TABLE_BODY_HEIGHT_BUFFER_PX = 2
 
 function measureTableBodyHeight(container: HTMLElement): number {
-  const header = container.querySelector('.ant-table-thead')
+  const header =
+    container.querySelector('.ant-table-header') ?? container.querySelector('.ant-table-thead')
   const headerHeight = header?.getBoundingClientRect().height ?? 0
-  return Math.max(120, Math.floor(container.clientHeight - headerHeight))
+  return Math.max(
+    120,
+    Math.floor(container.clientHeight - headerHeight - TABLE_BODY_HEIGHT_BUFFER_PX),
+  )
 }
 
 interface Props {
@@ -130,7 +137,9 @@ function MusicTrackTable({
           />
           <div className="music-track-meta">
             <span className="music-track-title">{track.filename}</span>
-            <span className="music-track-artist-mobile">{track.artist || 'Unknown artist'}</span>
+            {isMobile && (
+              <span className="music-track-artist-mobile">{track.artist || 'Unknown artist'}</span>
+            )}
           </div>
         </Space>
       ),
@@ -397,10 +406,10 @@ function MusicTrackTable({
           components={{
             body: {
               row: MusicTableRow,
-              listItemHeight: VIRTUAL_ROW_HEIGHT,
             },
-          // listItemHeight is consumed by rc-table virtual body but omitted from antd types.
-          } as NonNullable<ComponentProps<typeof Table>['components']>}
+          }}
+          // rc-table VirtualTable reads listItemHeight; antd Table typings omit it.
+          {...({ listItemHeight: VIRTUAL_ROW_HEIGHT } as object)}
           locale={{
             emptyText: search.trim() ? 'No matching tracks' : 'No tracks',
           }}

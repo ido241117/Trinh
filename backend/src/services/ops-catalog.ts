@@ -5,8 +5,14 @@ export type HealthTarget = {
   label: string
   url: string
   expect?: string
-  kind?: 'http' | 'process'
+  kind?: 'http' | 'process' | 'command'
   processName?: string
+  /** Absolute path or PATH-resolvable binary for kind=command */
+  command?: string
+  commandArgs?: string[]
+  /** When set with jsonEquals, parse stdout as JSON and compare field */
+  jsonField?: string
+  jsonEquals?: string
 }
 
 export type ServiceOpen = {
@@ -40,8 +46,25 @@ export function resolveOpenUrl(open?: ServiceOpen): string | null {
   return `http://${SERVICES_CONFIG.lanHost}:${open.lanPort}${open.lanPath || '/'}`
 }
 
-/** LAN-only catalog (ops as-is). No domain HTTPS probes. Tunnel = process on/off. */
+/** LAN-only catalog (ops as-is). No domain HTTPS probes. Infra = process / command on/off. */
 export const SERVICES: ServiceDef[] = [
+  {
+    id: 'docker-desktop',
+    name: 'Docker Desktop',
+    description: 'Docker Engine GUI — on/off theo process (Medic / Forgejo / map)',
+    startScript: 'docker-desktop\\deploy\\start.vbs',
+    stopScript: 'docker-desktop\\deploy\\stop.bat',
+    startArgs: ['/silent'],
+    canDeploy: false,
+    health: [
+      {
+        label: 'backend',
+        url: 'process://com.docker.backend.exe',
+        kind: 'process',
+        processName: 'com.docker.backend.exe',
+      },
+    ],
+  },
   {
     id: 'tunnel',
     name: 'Cloudflare Tunnel',
@@ -56,6 +79,26 @@ export const SERVICES: ServiceDef[] = [
         url: 'process://cloudflared.exe',
         kind: 'process',
         processName: 'cloudflared.exe',
+      },
+    ],
+  },
+  {
+    id: 'tailscale',
+    name: 'Tailscale',
+    description: 'VPN tray + up/down (không stop Windows service — cần admin)',
+    startScript: 'tailscale\\deploy\\start.vbs',
+    stopScript: 'tailscale\\deploy\\stop.bat',
+    startArgs: ['/silent'],
+    canDeploy: false,
+    health: [
+      {
+        label: 'tailnet',
+        url: 'command://tailscale-status',
+        kind: 'command',
+        command: 'C:\\Program Files\\Tailscale\\tailscale.exe',
+        commandArgs: ['status', '--json'],
+        jsonField: 'BackendState',
+        jsonEquals: 'Running',
       },
     ],
   },
@@ -77,7 +120,7 @@ export const SERVICES: ServiceDef[] = [
     id: 'software-lan',
     name: 'Software LAN',
     description: 'MusicPlayer LAN :2411 — auto-start',
-    startScript: 'Software_lan\\deploy\\start.vbs',
+    startScript: 'Software_lan\\deploy\\start-prod.vbs',
     stopScript: 'Software_lan\\deploy\\stop.bat',
     deployScript: 'Software_lan\\deploy\\deploy.bat',
     startArgs: ['/silent'],
