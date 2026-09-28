@@ -152,6 +152,9 @@ export default function EditTrackModal({ track, open, onClose, onTrackUpdated }:
         const res = await updateArtist(track.id, nextArtist)
         if (!res.ok) throw new Error((await res.json()).error || 'Artist update failed')
         updated = { ...updated, ...(await res.json() as TrackDTO) }
+        // Empty artist means "no artist": the server omits the field, so drop
+        // any stale value we may have carried over from the spread merges.
+        if (!nextArtist) delete updated.artist
       }
 
       if (dateChanged) {

@@ -166,13 +166,9 @@ export function createMusicRouter(musicFolder: string, imgDir: string) {
   })
 
   // PATCH /api/library/:id/artist
+  // Empty/blank artist removes the artist tag (clears it back to "no artist").
   router.patch('/library/:id/artist', async (req, res) => {
     const trimmed = typeof req.body.artist === 'string' ? req.body.artist.trim() : ''
-
-    if (!trimmed) {
-      res.status(400).json({ error: 'Invalid artist: must be a non-empty string' })
-      return
-    }
 
     const doc = await getTrackCollection().findOne({ _id: req.params.id } as never)
     if (!doc) {
@@ -187,6 +183,8 @@ export function createMusicRouter(musicFolder: string, imgDir: string) {
 
     try {
       await withMtimePreserved(doc.absolutePath, doc.absolutePath, async (tempPath) => {
+        // node-id3 merges tags: an empty artist drops the existing TPE1 frame
+        // while leaving every other tag (title, album, cover, ...) untouched.
         const result = NodeID3.update({ artist: trimmed }, tempPath)
         if (result !== true) {
           const msg = result instanceof Error ? result.message : 'node-id3 update failed'
@@ -194,13 +192,25 @@ export function createMusicRouter(musicFolder: string, imgDir: string) {
         }
       })
 
-      await getTrackCollection().updateOne(
-        { _id: req.params.id } as never,
-        { $set: { artist: trimmed } } as never
-      )
+      if (trimmed) {
+        await getTrackCollection().updateOne(
+          { _id: req.params.id } as never,
+          { $set: { artist: trimmed } } as never
+        )
+      } else {
+        await getTrackCollection().updateOne(
+          { _id: req.params.id } as never,
+          { $unset: { artist: '' } } as never
+        )
+      }
 
       const { _id, absolutePath: _, scannedAt: __, ...rest } = doc
-      res.json({ id: _id, ...rest, artist: trimmed })
+      if (!trimmed) {
+        const { artist: _removed, ...restNoArtist } = rest
+        res.json({ id: _id, ...restNoArtist })
+      } else {
+        res.json({ id: _id, ...rest, artist: trimmed })
+      }
     } catch {
       res.status(500).json({ error: 'Artist update failed' })
     }

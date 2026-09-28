@@ -168,7 +168,10 @@ export function useLibrary(options?: UseLibraryOptions) {
       const idx = prev.findIndex(t => t.id === track.id)
       if (idx === -1) return [...prev, track]
       const next = [...prev]
-      next[idx] = { ...next[idx], ...track }
+      // The server returns the complete current document, so replace it
+      // wholesale — a shallow merge would keep fields the server removed
+      // (e.g. `artist` after it was cleared back to "no artist").
+      next[idx] = track
       return next
     })
   }, [])

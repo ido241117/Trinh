@@ -81,6 +81,16 @@ describe('useLibrary', () => {
     expect(fetch).toHaveBeenCalledTimes(1)
   })
 
+  it('upsertTrack removes artist when the server DTO omits it', async () => {
+    const { result } = renderHook(() => useLibrary())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    const { artist: _stale, ...noArtist } = mockTracks[2]
+    act(() => {
+      result.current.upsertTrack({ ...noArtist })
+    })
+    expect(result.current.tracks.find(t => t.id === 'c3')?.artist).toBeUndefined()
+  })
+
   it('removeTrack drops a track without fetching', async () => {
     const { result } = renderHook(() => useLibrary())
     await waitFor(() => expect(result.current.loading).toBe(false))
